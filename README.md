@@ -1,38 +1,41 @@
 # Skill Shelf Releases
 
-Official installers and application updates for Skill Shelf. Source development
-is maintained in [voidrinz/skill-shelf](https://github.com/voidrinz/skill-shelf); this repository builds tagged source revisions and
-hosts the resulting GitHub Releases.
+Mac downloads for [Skill Shelf](https://github.com/voidrinz/skill-shelf).
+This repository builds tagged source revisions and hosts GitHub Releases.
 
-Download an installer from [Releases](https://github.com/voidrinz/skill-shelf-releases/releases/latest):
-
+Download from [Releases](https://github.com/voidrinz/skill-shelf-releases/releases/latest).
 Installers will be available after the first release is published.
 
-- macOS Apple Silicon: `skill-shelf-<version>-mac-arm64.dmg`
-- macOS Intel: `skill-shelf-<version>-mac-x64.dmg`
-- Windows: `skill-shelf-<version>-win-x64.exe`
-- Linux: `skill-shelf-<version>-linux-x64.AppImage`
+- Apple Silicon (M-series): `skill-shelf-<version>-mac-arm64.dmg`.
+- Intel: `skill-shelf-<version>-mac-x64.dmg`.
 
-In the installed app, open Settings > About to check for updates, download a
-new version, and restart to install it. Closing the main window keeps the app
-running in the menu bar/system tray; use Quit to exit.
+Open the DMG and drag Skill Shelf into Applications. These builds use ad-hoc
+signing without an Apple Developer certificate or notarization. If macOS blocks
+the first launch, follow Apple's
+[instructions for opening an app from an unidentified developer](https://support.apple.com/en-us/102445).
 
-Published macOS builds require Developer ID signing and notarization. The
-current Windows workflow does not configure code signing. Each release includes
-`SHA256SUMS`, installer files, blockmaps, and architecture-specific update feeds.
+Settings > About checks for new versions and opens this repository's download
+page. To update, quit Skill Shelf and replace the app with the latest download.
+Your Skill shelf is stored separately and is preserved. Closing the main window
+keeps the app in the menu bar; use Quit to exit. In-app automatic installation
+is not enabled for these Mac builds.
+
+Each release includes both architectures' DMG and ZIP downloads, version-check
+metadata, blockmaps, and `SHA256SUMS`.
 
 ## Maintainer Setup
 
-The build workflow trusts `voidrinz/skill-shelf` by default. Push the source code
-and a stable tag matching `desktop/package.json`, such as `v0.1.0`, before
-running it. In Actions, **Build And Publish Skill Shelf** can build a preview
-with `publish` unchecked; preview artifacts do not create a public release.
+The workflow trusts `voidrinz/skill-shelf` by default. Push the source and a
+stable tag matching `desktop/package.json`, such as `v0.1.0`. **Build And Publish
+Skill Shelf** also supports manual runs: leave `publish` off for workflow
+artifacts, or enable it to create a GitHub Release.
 
-For automatic publishing, add `RELEASES_REPO_TOKEN` to the source repository's
-Actions secrets. Use a fine-grained token with Contents write access to this
-repository. Create a `release` environment here and add the macOS signing and
-notarization secrets: `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`,
-`APPLE_APP_SPECIFIC_PASSWORD`, and `APPLE_TEAM_ID`.
+Automatic tag-triggered publishing requires `RELEASES_REPO_TOKEN` in the source
+repository's Actions secrets: a fine-grained token with Contents write access
+to this repository. No Apple certificate, Apple account, notarization secret,
+or `release` environment is required. Both Mac architectures must build and
+pass signature verification before publishing.
 
-The complete configuration and release process are documented in the source
-repository's [release guide](https://github.com/voidrinz/skill-shelf/blob/main/docs/releases.md).
+See the source repository's
+[release guide](https://github.com/voidrinz/skill-shelf/blob/main/docs/releases.md)
+for the complete configuration and process.

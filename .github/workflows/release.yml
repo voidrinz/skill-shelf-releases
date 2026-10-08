@@ -10,7 +10,7 @@ on:
         required: true
         type: string
       publish:
-        description: 'Publish signed builds (off builds a preview only)'
+        description: 'Publish macOS downloads (off builds a preview only)'
         type: boolean
         default: false
 
@@ -82,22 +82,13 @@ jobs:
 
   build:
     needs: verify
-    environment: release
     strategy:
       fail-fast: false
       matrix:
         include:
           - runner: macos-15
-            platform: mac
             arch: arm64
           - runner: macos-15-intel
-            platform: mac
-            arch: x64
-          - runner: windows-latest
-            platform: win
-            arch: x64
-          - runner: ubuntu-latest
-            platform: linux
             arch: x64
     runs-on: ${{ matrix.runner }}
     defaults:
@@ -116,39 +107,26 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Require macOS signing for published releases
-        if: matrix.platform == 'mac' && (github.event_name == 'repository_dispatch' || inputs.publish)
-        env:
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
-            if [ -z "${!name}" ]; then echo "Missing signing secret: $name" >&2; exit 1; fi
-          done
-      - name: Build installers and architecture-specific update metadata
+      - name: Build macOS downloads without Apple credentials
         env:
           SKILL_SHELF_RELEASE_ARCH: ${{ matrix.arch }}
-          SKILL_SHELF_REQUIRE_SIGNING: ${{ matrix.platform == 'mac' && (github.event_name == 'repository_dispatch' || inputs.publish) }}
-          BUILD_PLATFORM: ${{ matrix.platform }}
           BUILD_ARCH: ${{ matrix.arch }}
-          CSC_LINK: ${{ matrix.platform == 'mac' && secrets.CSC_LINK || '' }}
-          CSC_KEY_PASSWORD: ${{ matrix.platform == 'mac' && secrets.CSC_KEY_PASSWORD || '' }}
-          APPLE_ID: ${{ matrix.platform == 'mac' && secrets.APPLE_ID || '' }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'mac' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ matrix.platform == 'mac' && secrets.APPLE_TEAM_ID || '' }}
-        run: pnpm --filter @skill-shelf/desktop run dist "--$BUILD_PLATFORM" "--$BUILD_ARCH"
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm --filter @skill-shelf/desktop run dist --mac "--$BUILD_ARCH"
+      - name: Verify application signature
+        env:
+          BUILD_ARCH: ${{ matrix.arch }}
+        run: |
+          APP_DIR=mac
+          if [ "$BUILD_ARCH" = arm64 ]; then APP_DIR=mac-arm64; fi
+          codesign --verify --deep --strict --verbose=2 "desktop/release/$APP_DIR/Skill Shelf.app"
       - uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.platform }}-${{ matrix.arch }}
+          name: release-mac-${{ matrix.arch }}
           if-no-files-found: error
           path: |
             desktop/release/*.dmg
             desktop/release/*.zip
-            desktop/release/*.exe
-            desktop/release/*.AppImage
             desktop/release/*.blockmap
             desktop/release/latest-*.yml
 
@@ -156,7 +134,6 @@ jobs:
     needs: [verify, build]
     if: github.event_name == 'repository_dispatch' || inputs.publish
     runs-on: ubuntu-latest
-    environment: release
     permissions:
       contents: write
     steps:
@@ -167,12 +144,19 @@ jobs:
           merge-multiple: true
       - name: Validate the complete update feed
         run: |
-          for file in latest-arm64-mac.yml latest-x64-mac.yml latest-x64.yml latest-x64-linux.yml; do
+          for file in latest-arm64-mac.yml latest-x64-mac.yml; do
             test -s "artifacts/$file" || { echo "Missing $file" >&2; exit 1; }
+          done
+          for arch in arm64 x64; do
+            for ext in dmg zip; do
+              test -s "artifacts/skill-shelf-${TAG#v}-mac-$arch.$ext" || { echo "Missing $arch $ext" >&2; exit 1; }
+            done
           done
           cd artifacts
           sha256sum * > SHA256SUMS
-      - name: Publish all platforms together
+        env:
+          TAG: ${{ needs.verify.outputs.tag }}
+      - name: Publish both macOS architectures together
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -182,7 +166,7 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             test "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = true || { echo 'Published releases are immutable; use a new version.' >&2; exit 1; }
           else
-            gh release create "$TAG" --draft --title "Skill Shelf $TAG" --notes "Built from $SOURCE_REPOSITORY@$SOURCE_SHA. Download the installer for your platform. Installed applications can update from Settings > About."
+            gh release create "$TAG" --draft --title "Skill Shelf $TAG" --notes "macOS downloads built from $SOURCE_REPOSITORY@$SOURCE_SHA. Choose arm64 for Apple Silicon or x64 for Intel. These builds use ad-hoc signing without Apple notarization. Settings > About checks for new versions and opens the download page; install updates manually."
           fi
           gh release upload "$TAG" artifacts/* --clobber
           gh release edit "$TAG" --draft=false --latest
