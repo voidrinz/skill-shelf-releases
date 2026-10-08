@@ -27,8 +27,9 @@ metadata, blockmaps, and `SHA256SUMS`.
 
 The workflow trusts `voidrinz/skill-shelf` by default. Push the source and a
 stable tag matching `desktop/package.json`, such as `v0.1.0`. **Build And Publish
-Skill Shelf** also supports manual runs: leave `publish` off for workflow
-artifacts, or enable it to create a GitHub Release.
+Skill Shelf** also supports manual runs: leave `publish` off and enter the full
+source commit SHA to test packaging before creating a tag. Publishing requires
+a stable source tag; enable `publish` to create a GitHub Release.
 
 Automatic tag-triggered publishing requires `RELEASES_REPO_TOKEN` in the source
 repository's Actions secrets: a fine-grained token with Contents write access
