@@ -1,0 +1,29 @@
+.github/workflows/release.yml
+  s_195416a04c53e0::t_e9be9d8dfb84b2 85,89,108,110,113,116,119-120,142-143,156
+README.md
+  s_d156a057076bd4::t_3b8bce15af4c1e 8-10,17-19,22,36-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8a3f7e9ec64c796aa20fc9968d1dc3165953d242",
+  "prompts": {},
+  "sessions": {
+    "s_195416a04c53e0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11e50-cc54-76c3-99aa-e723562867e6",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rin <voidrinfx@gmail.com>"
+    },
+    "s_d156a057076bd4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11f65-e785-7730-8ba3-2f272150ac9e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rin <voidrinfx@gmail.com>"
+    }
+  }
+}
