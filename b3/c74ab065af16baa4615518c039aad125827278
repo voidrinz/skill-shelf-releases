@@ -1,0 +1,16 @@
+.github/workflows/release.yml
+  h_40e657bdf5159a 163-170,182
+README.md
+  h_40e657bdf5159a 14-16,19-20,36-40,42-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b3c74ab065af16baa4615518c039aad125827278",
+  "prompts": {},
+  "humans": {
+    "h_40e657bdf5159a": {
+      "author": "Rin <voidrinfx@gmail.com>"
+    }
+  }
+}
